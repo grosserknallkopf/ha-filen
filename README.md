@@ -1,10 +1,15 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="custom_components/filen/brand/dark_logo.png">
+  <img src="custom_components/filen/brand/logo.png" alt="Filen" height="64">
+</picture>
+
 # Filen for Home Assistant
 
 Store your Home Assistant backups end-to-end encrypted in [Filen](https://filen.io).
 
 **Deutsch:** Mit dieser Integration landen deine Home-Assistant-Backups direkt und Ende-zu-Ende-verschlüsselt in Filen, ohne Umweg über das Rclone-Add-on. Filen wird dazu einfach als zusätzlicher Speicherort in den Backup-Einstellungen von Home Assistant ausgewählt.
 
-Built in the style of [ha-internxt](https://github.com/TheRealSimon42/ha-internxt), with the protocol ported from the official [filen-sdk-ts](https://github.com/FilenCloudDienste/filen-sdk-ts) and [filen-sdk-go](https://github.com/FilenCloudDienste/filen-sdk-go). Works with the free Filen plan; no rclone, no Node.js, no add-on needed.
+Built in the style of [ha-internxt](https://github.com/TheRealSimon42/ha-internxt), with the protocol implemented from Filen's API documentation and cross-checked against the official [filen-sdk-ts](https://github.com/FilenCloudDienste/filen-sdk-ts) and [filen-sdk-go](https://github.com/FilenCloudDienste/filen-sdk-go) SDKs. Works with the free Filen plan; no rclone, no Node.js, no add-on needed.
 
 ## Features
 
@@ -70,6 +75,7 @@ Files must be in a folder Home Assistant may read, like `/media` or `/config/www
 | Path | Content |
 | --- | --- |
 | `custom_components/filen/` | The Home Assistant integration (config flow with 2FA and reauth, backup agent, sensors, actions, media source, diagnostics, de/en) |
+| `custom_components/filen/brand/` | Icons and logos for the Home Assistant UI and Marketplace, from the official Filen press kit |
 | `aiofilen/` | Async Python client for Filen: login (auth v2/v3), AES-256-GCM, streaming up- and download with byte ranges |
 | `aiofilen/tests/` | Library tests against a fake Filen gateway (`pytest`) |
 | `tests/` | Integration tests (`pytest-homeassistant-custom-component`) |

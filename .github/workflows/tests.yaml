@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1" # weekly, to notice new Home Assistant releases early
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  library:
+    name: aiofilen (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e "aiofilen[test]"
+      - name: Integration ships the current library
+        run: scripts/sync_lib.sh && git diff --exit-code custom_components/filen/aiofilen
+      - run: python -m pytest aiofilen/tests -q --timeout 120
+
+  integration:
+    name: Integration (HA ${{ matrix.ha }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ha: "2026.10" # pytest-homeassistant-custom-component
+          - ha: "2026.11.2" # pytest-homeassistant, shipped by Home Assistant since 2026.11
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - name: Install Home Assistant 2026.10 test environment
+        if: matrix.ha == '2026.10'
+        run: pip install "pytest-homeassistant-custom-component==0.13.375"
+      - name: Install Home Assistant ${{ matrix.ha }} test environment
+        if: matrix.ha != '2026.10'
+        run: pip install "pytest-homeassistant==${{ matrix.ha }}"
+      - run: python -m pytest -q
