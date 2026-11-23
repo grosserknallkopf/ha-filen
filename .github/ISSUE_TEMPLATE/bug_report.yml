@@ -1,0 +1,70 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! German or English is fine.
+  - type: input
+    id: integration-version
+    attributes:
+      label: Filen integration version
+      description: Shown in the integration page and in HACS/Marketplace.
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      description: Settings → About.
+      placeholder: "2026.11.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: What is affected?
+      multiple: true
+      options:
+        - Login, 2FA or reauthentication
+        - Connection test / setup
+        - Backups (upload, download, restore, retention)
+        - Storage sensors
+        - Actions (filen.upload, filen.delete)
+        - Media source
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: |
+        Settings → System → Logs, filtered by `custom_components.filen`.
+        Please remove your e-mail address and any keys before posting.
+      render: text
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics (optional)
+      description: |
+        On the Filen integration page: ⋮ → Download diagnostics. Secrets are redacted.
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am on the latest release of the integration.
+          required: true
+        - label: I removed my e-mail address, password and keys from the logs.
+          required: true
