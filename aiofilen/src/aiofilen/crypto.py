@@ -159,9 +159,14 @@ def decrypt_chunk(data: bytes, key: str, version: int) -> bytes:
 
 
 def hash_name(name: str, auth_version: int, hmac_key: bytes | None) -> str:
-    """The nameHashed value the API uses for /dir/exists and /file/exists."""
+    """The nameHashed value the API uses for /dir/exists and /file/exists.
+
+    v1/v2: SHA-1 over the hex-encoded SHA-512 of the lowercased name (the
+    SDK's hashFn — not a plain SHA-512). v3: HMAC-SHA256 with the HKDF key.
+    """
     if auth_version in (1, 2):
-        return hashlib.sha512(name.lower().encode()).hexdigest()
+        inner = hashlib.sha512(name.lower().encode()).hexdigest()
+        return hashlib.sha1(inner.encode()).hexdigest()  # noqa: S324 - Filen's format
     if hmac_key is None:
         raise FilenCryptoError("auth version 3 needs an HMAC key for name hashes")
     return hmac.new(hmac_key, name.lower().encode(), hashlib.sha256).hexdigest()

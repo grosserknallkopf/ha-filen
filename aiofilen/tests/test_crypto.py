@@ -111,7 +111,10 @@ def test_chunk_wrong_version_key():
 
 
 def test_hash_name_v2():
-    assert crypto.hash_name("Foo.TXT", 2, None) == hashlib.sha512(b"foo.txt").hexdigest()
+    # official test vectors from filen-sdk-go (sha1 over the hex sha512)
+    assert crypto.hash_name("abc", 2, None) == "5c5a4ad792911a5a58741e16257f62b664aa2df3"
+    assert crypto.hash_name("cde", 2, None) == "dc4237084f19afa9eb668edcbc39b5da51f63273"
+    assert crypto.hash_name("ABC", 2, None) == crypto.hash_name("abc", 2, None)
 
 
 def test_hash_name_v3():
