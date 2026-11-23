@@ -1,0 +1,23 @@
+{
+  "domain": "filen",
+  "name": "Filen",
+  "categories": [
+    "computers_network.cloud_developer_tools"
+  ],
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
+  "documentation": "https://github.com/grosserknallkopf/ha-filen",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/grosserknallkopf/ha-filen/issues",
+  "loggers": [
+    "custom_components.filen"
+  ],
+  "requirements": [
+    "argon2-cffi==25.1.0"
+  ],
+  "version": "0.1.0"
+}

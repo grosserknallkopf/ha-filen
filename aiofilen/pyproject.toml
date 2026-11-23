@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiofilen"
+version = "0.1.0"
+description = "Async Python client for Filen (filen.io), ported from the official SDKs"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9",
+    "cryptography>=42",
+    "argon2-cffi>=23.1",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-asyncio", "pytest-timeout"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aiofilen = ["py.typed"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# The HA test plugin (if installed) blocks real sockets; these tests need them.
+addopts = "-p no:homeassistant"
+testpaths = ["tests"]

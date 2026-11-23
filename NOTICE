@@ -1,0 +1,14 @@
+ha-filen
+Copyright (c) 2026 ha-filen contributors
+
+This project includes a Python port of the Filen client protocol from:
+
+- filen-sdk-ts (https://github.com/FilenCloudDienste/filen-sdk-ts), MIT license,
+  Copyright (c) FilenCloudDienste GmbH
+- filen-sdk-go (https://github.com/FilenCloudDienste/filen-sdk-go), MIT license,
+  Copyright (c) FilenCloudDienste GmbH
+
+The integration structure follows ha-internxt
+(https://github.com/TheRealSimon42/ha-internxt), MIT license.
+
+This is a community project, not an official Filen product.

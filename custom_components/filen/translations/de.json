@@ -1,0 +1,162 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Filen verbinden",
+        "description": "Melde dich mit deinem Filen-Konto an. Dein Passwort wird nur zum Anmelden und Ableiten deiner Verschlüsselungsschlüssel verwendet und nicht gespeichert. Filen begrenzt fehlgeschlagene Anmeldeversuche, bitte prüfe deine Angaben vor einem erneuten Versuch.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "email": "Die E-Mail-Adresse deines Filen-Kontos.",
+          "password": "Dein Filen-Passwort. Es leitet einmalig deine Verschlüsselungsschlüssel ab und wird danach verworfen."
+        }
+      },
+      "two_factor": {
+        "title": "Zwei-Faktor-Anmeldung",
+        "description": "Gib den aktuellen 6-stelligen Code aus deiner Authenticator-App ein. Jeder falsche Code zählt bei Filen als Fehlversuch.",
+        "data": {
+          "code": "Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut bei Filen anmelden",
+        "description": "Die Verbindung zu Filen für {email} ist abgelaufen. Gib dein Passwort ein, um dich neu anzumelden.",
+        "data": {
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-Mail oder Passwort ist falsch. Fehlversuche werden von Filen begrenzt, bitte erst prüfen, dann erneut versuchen.",
+      "invalid_2fa": "Der 2FA-Code wurde nicht akzeptiert. Warte auf einen neuen Code und versuche es noch einmal.",
+      "account_blocked": "Filen hat dieses Konto gesperrt oder blockiert. Prüfe dein Konto auf filen.io oder wende dich an den Filen-Support.",
+      "cannot_connect": "Filen ist nicht erreichbar. Prüfe die Internetverbindung und versuche es erneut.",
+      "preflight_failed": "Die Anmeldung hat geklappt, aber der Verbindungstest (Ordner anlegen, kleine Datei hoch- und herunterladen) ist fehlgeschlagen. Details stehen im Home-Assistant-Protokoll.",
+      "unknown": "Unerwarteter Fehler. Details stehen im Home-Assistant-Protokoll."
+    },
+    "abort": {
+      "already_configured": "Dieses Filen-Konto ist bereits eingerichtet.",
+      "reauth_successful": "Erneut bei Filen angemeldet.",
+      "wrong_account": "Das ist ein anderes Filen-Konto als das hier eingerichtete."
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Filen hat die Anmeldung abgelehnt. Bitte melde dich erneut an."
+    },
+    "account_unusable": {
+      "message": "Das Filen-Konto kann nicht für Backups genutzt werden: {error}"
+    },
+    "cannot_connect": {
+      "message": "Filen ist nicht erreichbar."
+    },
+    "quota_exceeded": {
+      "message": "Nicht genug Platz in Filen für dieses Backup: {error}"
+    },
+    "backup_not_found": {
+      "message": "Backup in Filen nicht gefunden."
+    },
+    "operation_failed": {
+      "message": "Filen-Vorgang fehlgeschlagen: {error}"
+    },
+    "update_failed": {
+      "message": "Speicherbelegung von Filen nicht lesbar: {error}"
+    },
+    "entry_not_found": {
+      "message": "Kein Filen-Konto mit der ID {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "Das Filen-Konto {title} ist nicht geladen."
+    },
+    "no_access_to_path": {
+      "message": "Home Assistant darf {filename} nicht lesen. Nimm einen Ordner wie /media oder /config/www oder trage ihn unter allowlist_external_dirs ein."
+    },
+    "file_not_found": {
+      "message": "Die Datei {filename} gibt es nicht."
+    },
+    "file_exists": {
+      "message": "{path} gibt es in Filen schon. Schalte „Überschreiben“ ein, um sie zu ersetzen."
+    },
+    "upload_failed": {
+      "message": "Hochladen von {filename} zu Filen fehlgeschlagen: {error}"
+    },
+    "path_not_found": {
+      "message": "{path} wurde in Filen nicht gefunden."
+    },
+    "delete_failed": {
+      "message": "Löschen von {path} in Filen fehlgeschlagen: {error}"
+    },
+    "invalid_path": {
+      "message": "{path} ist kein gültiger Filen-Pfad."
+    },
+    "duplicate_name": {
+      "message": "{name} kommt mehrfach vor; lade pro Name nur eine Datei gleichzeitig hoch."
+    },
+    "backup_folder_protected": {
+      "message": "{path} liegt im Backup-Ordner {folder}. Backups bitte unter Einstellungen → System → Backups löschen, damit Home Assistant den Überblick behält."
+    },
+    "overwrite_incomplete": {
+      "message": "Die neue Fassung von {path} wurde hochgeladen, aber die alte konnte nicht in den Filen-Papierkorb verschoben werden ({error}). Jetzt liegen beide Fassungen im Ordner; lösche die alte in Filen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "storage_used": {
+        "name": "Speicher belegt"
+      },
+      "storage_free": {
+        "name": "Speicher frei"
+      },
+      "storage_total": {
+        "name": "Speicher gesamt"
+      },
+      "storage_used_percent": {
+        "name": "Speicher belegt (Prozent)"
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Dateien hochladen",
+      "description": "Lädt Dateien aus Home Assistant zu Filen hoch, verschlüsselt auf diesem Gerät. Erlaubt sind nur Dateien aus freigegebenen Ordnern, zum Beispiel /media oder /config/www.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Filen-Konto",
+          "description": "Das Filen-Konto, in das hochgeladen wird."
+        },
+        "filename": {
+          "name": "Dateien",
+          "description": "Vollständige Pfade der Dateien, die hochgeladen werden."
+        },
+        "destination_folder": {
+          "name": "Zielordner",
+          "description": "Ordner in Filen, Unterordner mit / getrennt. Fehlende Ordner werden angelegt."
+        },
+        "overwrite": {
+          "name": "Überschreiben",
+          "description": "Eine Datei mit gleichem Namen ersetzen. Erst wird die neue hochgeladen, danach landet die alte Fassung im Filen-Papierkorb."
+        }
+      }
+    },
+    "delete": {
+      "name": "Dateien löschen",
+      "description": "Löscht Dateien in Filen. Standardmäßig landen sie im Filen-Papierkorb. Backups lassen sich hier nicht löschen, dafür gibt es die Backup-Einstellungen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Filen-Konto",
+          "description": "Das Filen-Konto, in dem gelöscht wird."
+        },
+        "path": {
+          "name": "Pfade",
+          "description": "Pfade der Dateien in Filen, zum Beispiel Home Assistant Uploads/haustuer.jpg."
+        },
+        "permanently": {
+          "name": "Endgültig löschen",
+          "description": "Sofort löschen statt in den Papierkorb verschieben. Das lässt sich nicht rückgängig machen."
+        }
+      }
+    }
+  }
+}

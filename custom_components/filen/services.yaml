@@ -1,0 +1,40 @@
+upload:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: filen
+    filename:
+      required: true
+      example: "/media/snapshots/front_door.jpg"
+      selector:
+        text:
+          multiple: true
+    destination_folder:
+      default: "Home Assistant Uploads"
+      example: "Home Assistant Uploads/Kameras"
+      selector:
+        text:
+    overwrite:
+      default: false
+      selector:
+        boolean:
+
+delete:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: filen
+    path:
+      required: true
+      example: "Home Assistant Uploads/Kameras/front_door.jpg"
+      selector:
+        text:
+          multiple: true
+    permanently:
+      default: false
+      selector:
+        boolean:

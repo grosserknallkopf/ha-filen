@@ -1,0 +1,162 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Filen",
+        "description": "Log in with your Filen account. Your password is only used to log in and derive your encryption keys; it is not stored. Filen rate limits failed logins, so please check your details before trying again.",
+        "data": {
+          "email": "E-mail",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "The e-mail address of your Filen account.",
+          "password": "Your Filen password. It derives your encryption keys once and is then discarded."
+        }
+      },
+      "two_factor": {
+        "title": "Two-factor authentication",
+        "description": "Enter the current 6-digit code from your authenticator app. Every wrong code counts as a failed login at Filen.",
+        "data": {
+          "code": "Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Log in to Filen again",
+        "description": "The connection to Filen for {email} has expired. Enter your password to log in again.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-mail or password is wrong. Failed attempts are rate limited by Filen, so please check before trying again.",
+      "invalid_2fa": "The 2FA code was not accepted. Wait for a fresh code and try again.",
+      "account_blocked": "Filen has locked or blocked this account. Check your account at filen.io or contact Filen support.",
+      "cannot_connect": "Could not reach Filen. Check the internet connection and try again.",
+      "preflight_failed": "Login worked, but the connection test (create folder, upload and download a small file) failed. Details are in the Home Assistant log.",
+      "unknown": "Unexpected error. Details are in the Home Assistant log."
+    },
+    "abort": {
+      "already_configured": "This Filen account is already set up.",
+      "reauth_successful": "Logged in to Filen again.",
+      "wrong_account": "This is a different Filen account than the one set up here."
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Filen rejected the login. Please log in again."
+    },
+    "account_unusable": {
+      "message": "The Filen account cannot be used for backups: {error}"
+    },
+    "cannot_connect": {
+      "message": "Could not reach Filen."
+    },
+    "quota_exceeded": {
+      "message": "Not enough space in Filen for this backup: {error}"
+    },
+    "backup_not_found": {
+      "message": "Backup not found in Filen."
+    },
+    "operation_failed": {
+      "message": "Filen operation failed: {error}"
+    },
+    "update_failed": {
+      "message": "Could not read the Filen storage usage: {error}"
+    },
+    "entry_not_found": {
+      "message": "No Filen account with the ID {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "The Filen account {title} is not loaded."
+    },
+    "no_access_to_path": {
+      "message": "Home Assistant is not allowed to read {filename}. Use a folder like /media or /config/www, or add it to allowlist_external_dirs."
+    },
+    "file_not_found": {
+      "message": "The file {filename} does not exist."
+    },
+    "file_exists": {
+      "message": "{path} already exists in Filen. Turn on overwrite to replace it."
+    },
+    "upload_failed": {
+      "message": "Upload of {filename} to Filen failed: {error}"
+    },
+    "path_not_found": {
+      "message": "{path} was not found in Filen."
+    },
+    "delete_failed": {
+      "message": "Deleting {path} in Filen failed: {error}"
+    },
+    "invalid_path": {
+      "message": "{path} is not a valid Filen path."
+    },
+    "duplicate_name": {
+      "message": "{name} appears more than once; upload one file per name at a time."
+    },
+    "backup_folder_protected": {
+      "message": "{path} is in the backup folder {folder}. Delete backups in Settings → System → Backups instead, so Home Assistant keeps track of them."
+    },
+    "overwrite_incomplete": {
+      "message": "The new version of {path} was uploaded, but moving the old version to the Filen trash failed ({error}). Both versions are now in the folder; delete the old one in Filen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "storage_used": {
+        "name": "Storage used"
+      },
+      "storage_free": {
+        "name": "Storage free"
+      },
+      "storage_total": {
+        "name": "Storage total"
+      },
+      "storage_used_percent": {
+        "name": "Storage used percentage"
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Upload files",
+      "description": "Uploads files from Home Assistant to Filen, encrypted on this device. Only files in allowed folders (for example /media or /config/www) can be uploaded.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Filen account",
+          "description": "The Filen account to upload to."
+        },
+        "filename": {
+          "name": "Files",
+          "description": "Full paths of the files to upload."
+        },
+        "destination_folder": {
+          "name": "Destination folder",
+          "description": "Folder in Filen, subfolders separated by /. Missing folders are created."
+        },
+        "overwrite": {
+          "name": "Overwrite",
+          "description": "Replace a file with the same name. The new file is uploaded first; only then the old version is moved to the Filen trash."
+        }
+      }
+    },
+    "delete": {
+      "name": "Delete files",
+      "description": "Deletes files in Filen. By default they are moved to the Filen trash. Backups can't be deleted here; use the backup settings.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Filen account",
+          "description": "The Filen account to delete from."
+        },
+        "path": {
+          "name": "Paths",
+          "description": "Paths of the files in Filen, for example Home Assistant Uploads/front_door.jpg."
+        },
+        "permanently": {
+          "name": "Delete permanently",
+          "description": "Delete right away instead of moving to the trash. This cannot be undone."
+        }
+      }
+    }
+  }
+}

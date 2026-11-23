@@ -1,0 +1,10 @@
+{
+  "services": {
+    "upload": {
+      "service": "mdi:cloud-upload"
+    },
+    "delete": {
+      "service": "mdi:delete"
+    }
+  }
+}
