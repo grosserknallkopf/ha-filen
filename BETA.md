@@ -27,11 +27,16 @@ the integration starts.
    ```
 
    `native-v0.1.0b1` builds and publishes the wheels for glibc and musl on
-   x86_64, aarch64 and armv7. `v0.2.0` is the integration release HACS/Marketplace
-   installs.
+   x86_64, aarch64 and armv7, and creates a GitHub pre-release with the wheel
+   files. `v0.2.0` creates the integration release HACS/Marketplace installs.
 4. Install/update the integration from HACS or the Marketplace, then restart
    Home Assistant. On startup Home Assistant installs
    `filen-sdk-native==0.1.0b1` from PyPI.
+
+If PyPI is not configured yet, the native release still contains the wheels as
+GitHub release assets, so you can install the matching one manually (see
+below). The integration itself still needs the exact pinned version, so the
+PyPI route is the supported one for automatic installs.
 
 If the Marketplace/HACS only offers stable integration releases, install the
 `v0.2.0` tag explicitly. The native wheel itself is a pre-release, but the
