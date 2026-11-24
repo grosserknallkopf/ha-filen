@@ -34,6 +34,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: PyO3/maturin-action@v1
+        env:
+          # ring's cross-compiled aarch64 assembly expects GCC to define this.
+          CFLAGS_aarch64_unknown_linux_gnu: -D__ARM_ARCH=8
         with:
           working-directory: native
           target: ${{ matrix.target }}

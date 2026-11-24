@@ -54,7 +54,7 @@ Files must be in a folder Home Assistant may read, like `/media` or `/config/www
 
 **HACS (Home Assistant before 2026.11):** HACS → ⋮ → *Custom repositories* → add `https://github.com/grosserknallkopf/ha-filen` as type *Integration*, install **Filen**, restart Home Assistant.
 
-**Manual:** copy `custom_components/filen` into `config/custom_components/`, install the native bridge into the Home Assistant Python environment with `pip install filen-sdk-native==0.1.0b1`, and restart Home Assistant.
+**Manual:** copy `custom_components/filen` into `config/custom_components/`, install the native bridge into the Home Assistant Python environment with `pip install filen-sdk-native==0.1.0b2`, and restart Home Assistant.
 
 The current release is a beta of the native SDK bridge; see [BETA.md](BETA.md)
 for testing and publishing instructions.
