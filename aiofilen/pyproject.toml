@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "AGPL-3.0-only" }
 requires-python = ">=3.12"
 dependencies = [
-    "filen-sdk-native==0.1.0b2",
+    "filen-sdk-native==0.1.0b3",
 ]
 
 [project.optional-dependencies]

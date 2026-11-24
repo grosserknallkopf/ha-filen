@@ -3,10 +3,10 @@
 This branch/release is the first version backed by Filen's official Rust SDK.
 It is published as a **pre-release** so it can be tried before a stable release.
 
-- Native bridge: `filen-sdk-native==0.1.0b2`
-- Integration: `0.2.0b2`, which pins the beta wheel in `manifest.json`
+- Native bridge: `filen-sdk-native==0.1.0b3`
+- Integration: `0.2.0b3`, which pins the beta wheel in `manifest.json`
 
-PyPI treats `0.1.0b2` as a pre-release, but an exact pin (`==0.1.0b2`) is
+PyPI treats `0.1.0b3` as a pre-release, but an exact pin (`==0.1.0b3`) is
 installed by pip without `--pre`. Home Assistant installs it automatically when
 the integration starts.
 
@@ -21,17 +21,17 @@ the integration starts.
 3. Push the tags:
 
    ```bash
-   git tag native-v0.1.0b2
-   git tag v0.2.0b2
-   git push origin main native-v0.1.0b2 v0.2.0b2
+   git tag native-v0.1.0b3
+   git tag v0.2.0b3
+   git push origin main native-v0.1.0b3 v0.2.0b3
    ```
 
-   `native-v0.1.0b2` builds and publishes the wheels for glibc and musl on
+   `native-v0.1.0b3` builds and publishes the wheels for glibc and musl on
    x86_64, aarch64 and armv7, and creates a GitHub pre-release with the wheel
-   files. `v0.2.0b2` creates the beta integration release HACS/Marketplace installs.
+   files. `v0.2.0b3` creates the beta integration release HACS/Marketplace installs.
 4. Install/update the integration from HACS or the Marketplace, then restart
    Home Assistant. On startup Home Assistant installs
-   `filen-sdk-native==0.1.0b2` from PyPI.
+   `filen-sdk-native==0.1.0b3` from PyPI.
 
 If PyPI is not configured yet, the native release still contains the wheels as
 GitHub release assets, so you can install the matching one manually (see
@@ -48,7 +48,7 @@ The release workflow also stores the built wheels as GitHub Actions artifacts.
 For a quick local test on a Debian/glibc HA Container:
 
 ```bash
-pip install filen_sdk_native-0.1.0b2-*.whl
+pip install filen_sdk_native-0.1.0b3-*.whl
 ```
 
 On Home Assistant OS (Alpine/musl), use the `*-musllinux_*.whl` matching the
