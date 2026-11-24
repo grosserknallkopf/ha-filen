@@ -5,6 +5,12 @@ on:
     tags:
       - "native-v*"
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to PyPI and create a GitHub release (leave off for a build-only validation)
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -66,9 +72,32 @@ jobs:
           path: native/dist/*.tar.gz
           if-no-files-found: error
 
+  verify:
+    name: Verify native wheels
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Check that every wheel bundles UniFFI Python bindings
+        run: python3 native/verify_wheels.py dist/*.whl
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - name: Import the x86_64 glibc wheel and check the public API
+        run: |
+          python3 -m pip install --no-deps dist/*manylinux*x86_64.whl
+          python3 -c 'import filen_sdk_native as sdk; assert all(hasattr(sdk, name) for name in ("Credentials", "SdkClient", "login"))'
+
   publish:
     name: Publish to PyPI
-    needs: [wheels, sdist]
+    if: github.event_name == 'push' || inputs.publish
+    needs: [verify]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -84,7 +113,8 @@ jobs:
 
   github-release:
     name: GitHub release
-    needs: [wheels, sdist]
+    if: github.event_name == 'push' || inputs.publish
+    needs: [verify]
     runs-on: ubuntu-latest
     permissions:
       contents: write
