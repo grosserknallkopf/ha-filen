@@ -113,21 +113,3 @@ jobs:
         with:
           packages-dir: dist
 
-  github-release:
-    name: GitHub release
-    if: github.ref_type == 'tag' || inputs.publish
-    needs: [verify]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
-          generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, 'b') || contains(github.ref_name, 'rc') }}
-
