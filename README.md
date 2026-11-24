@@ -7,7 +7,7 @@
 
 Store your Home Assistant backups end-to-end encrypted in [Filen](https://filen.io).
 
-**Deutsch:** Mit dieser Integration landen deine Home-Assistant-Backups direkt und Ende-zu-Ende-verschlüsselt in Filen, ohne Umweg über das Rclone-Add-on. Filen wird dazu einfach als zusätzlicher Speicherort in den Backup-Einstellungen von Home Assistant ausgewählt.
+**Deutsch:** Mit dieser Integration landen deine Home-Assistant-Backups direkt und Ende-zu-Ende-verschlüsselt in Filen – einschließlich ihrer Dateinamen – ohne Umweg über das Rclone-Add-on. Filen wird dazu einfach als zusätzlicher Speicherort in den Backup-Einstellungen von Home Assistant ausgewählt.
 
 Built in the style of [ha-internxt](https://github.com/TheRealSimon42/ha-internxt). The protocol and all cryptography come from Filen's official [filen-sdk-rs](https://github.com/FilenCloudDienste/filen-rs) through a small UniFFI bridge; the integration does not reimplement the API or crypto. Works with the free Filen plan; no rclone, no Node.js, no add-on needed.
 
@@ -17,7 +17,7 @@ The SDK bridge is a native extension, so the integration ships with a prebuilt w
 
 - Filen as a backup location in **Settings → System → Backups** (Home Assistant 2026.4 or newer)
 - Streaming upload and download with flat memory use (1 MiB chunks), also for multi-GB backups on a Raspberry Pi
-- Client-side encryption and name hashing implemented by Filen's own SDK, so files stay compatible with the Filen web and desktop apps
+- Client-side encryption of file contents and file names, implemented by Filen's own SDK, so files stay compatible with the Filen web and desktop apps
 - Login with two-factor authentication; the password is used once and never stored
 - Supports both Filen auth versions: 2 (PBKDF2) and 3 (Argon2id + DEK)
 - Integrity check (BLAKE3 + authenticated encryption) on every full download by the SDK, free-space check before every upload
@@ -72,7 +72,7 @@ for testing and publishing instructions.
 - **Restore without this integration.** Download the `.tar` in the Filen web or desktop app and upload it during Home Assistant onboarding.
 - **Your API key and master keys are stored in Home Assistant** (like every cloud login). Keep Home Assistant backups encrypted and your instance secured.
 - **Failed logins are rate limited by Filen.** The integration never retries a rejected password on its own.
-- File names are visible to Filen, file contents are not.
+- **File contents and file names are encrypted on your device** before they reach Filen.
 - Filen's API key is long-lived; there is no token refresh. If it is revoked, the integration asks you to log in again.
 
 ## Repository layout
