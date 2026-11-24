@@ -4,7 +4,7 @@ This branch/release is the first version backed by Filen's official Rust SDK.
 It is published as a **pre-release** so it can be tried before a stable release.
 
 - Native bridge: `filen-sdk-native==0.1.0b1`
-- Integration: `0.2.0`, which pins the beta wheel in `manifest.json`
+- Integration: `0.2.0b1`, which pins the beta wheel in `manifest.json`
 
 PyPI treats `0.1.0b1` as a pre-release, but an exact pin (`==0.1.0b1`) is
 installed by pip without `--pre`. Home Assistant installs it automatically when
@@ -22,8 +22,8 @@ the integration starts.
 
    ```bash
    git tag native-v0.1.0b1
-   git tag v0.2.0
-   git push origin main native-v0.1.0b1 v0.2.0
+   git tag v0.2.0b1
+   git push origin main native-v0.1.0b1 v0.2.0b1
    ```
 
    `native-v0.1.0b1` builds and publishes the wheels for glibc and musl on
