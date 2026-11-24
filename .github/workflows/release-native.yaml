@@ -2,6 +2,8 @@ name: Release native bridge
 
 on:
   push:
+    branches:
+      - "native-wheel-check"
     tags:
       - "native-v*"
   workflow_dispatch:
@@ -96,7 +98,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    if: github.event_name == 'push' || inputs.publish
+    if: github.ref_type == 'tag' || inputs.publish
     needs: [verify]
     runs-on: ubuntu-latest
     environment: pypi
@@ -113,7 +115,7 @@ jobs:
 
   github-release:
     name: GitHub release
-    if: github.event_name == 'push' || inputs.publish
+    if: github.ref_type == 'tag' || inputs.publish
     needs: [verify]
     runs-on: ubuntu-latest
     permissions:
