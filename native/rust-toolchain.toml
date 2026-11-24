@@ -1,0 +1,5 @@
+[toolchain]
+# filen-sdk-rs uses `#![feature(higher-ranked-assumptions, ...)]`, so the bridge and
+# everything it builds must use the SDK's pinned nightly.
+channel = "nightly-2026-02-20"
+components = ["rust-src"]

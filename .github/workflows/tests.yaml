@@ -16,8 +16,34 @@ permissions:
   contents: read
 
 jobs:
+  native:
+    name: Native bridge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-02-20
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+      - run: pip install maturin
+      - run: maturin build --out dist
+        working-directory: native
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-wheel
+          path: native/dist/*.whl
+          if-no-files-found: error
+
   library:
     name: aiofilen (Python ${{ matrix.python }})
+    needs: native
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,6 +56,11 @@ jobs:
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-wheel
+          path: native-wheel
+      - run: pip install native-wheel/*.whl
       - run: pip install -e "aiofilen[test]"
       - name: Integration ships the current library
         run: scripts/sync_lib.sh && git diff --exit-code custom_components/filen/aiofilen
@@ -37,6 +68,7 @@ jobs:
 
   integration:
     name: Integration (HA ${{ matrix.ha }})
+    needs: native
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -51,12 +83,15 @@ jobs:
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: "3.14"
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-wheel
+          path: native-wheel
+      - run: pip install native-wheel/*.whl
       - name: Install Home Assistant 2026.10 test environment
         if: matrix.ha == '2026.10'
         run: pip install "pytest-homeassistant-custom-component==0.13.375"
       - name: Install Home Assistant ${{ matrix.ha }} test environment
         if: matrix.ha != '2026.10'
         run: pip install "pytest-homeassistant==${{ matrix.ha }}"
-      - name: Install integration requirements
-        run: pip install "argon2-cffi==25.1.0"
       - run: python -m pytest -q

@@ -1,0 +1,4 @@
+[build]
+# Required by filen-sdk-rs (see its rust-toolchain.toml). Cargo does not apply a
+# dependency's .cargo/config.toml, so the flag has to be set here as well.
+rustflags = ["-Zhigher-ranked-assumptions"]

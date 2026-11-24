@@ -7,3 +7,5 @@ venv/
 .ruff_cache/
 dist/
 build/
+native/target/
+native/dist/

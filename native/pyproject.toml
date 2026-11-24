@@ -1,0 +1,23 @@
+[build-system]
+requires = ["maturin>=1.8,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "filen-sdk-native"
+version = "0.1.0b1"
+description = "Python bindings for the official Filen Rust SDK, used by the ha-filen Home Assistant integration"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "AGPL-3.0-only"
+authors = [{ name = "grosserknallkopf" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Rust",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+]
+dependencies = []
+
+[tool.maturin]
+bindings = "uniffi"
+manifest-path = "Cargo.toml"
+module-name = "filen_sdk_native"

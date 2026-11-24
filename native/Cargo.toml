@@ -1,0 +1,33 @@
+[package]
+name = "filen-sdk-native"
+version = "0.1.0-beta.1"
+edition = "2024"
+license = "AGPL-3.0-only"
+description = "Python bindings for the official Filen Rust SDK"
+repository = "https://github.com/grosserknallkopf/ha-filen"
+
+[lib]
+name = "filen_sdk_native"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+required-features = ["bindgen"]
+
+[features]
+bindgen = ["uniffi/cli"]
+
+[dependencies]
+filen-sdk-rs = { git = "https://github.com/FilenCloudDienste/filen-rs", rev = "dbd979a5f815f86e0f3c7c2637fa6a2c672fb17e", default-features = false, features = ["multi-threaded-crypto"] }
+filen-types = { git = "https://github.com/FilenCloudDienste/filen-rs", rev = "dbd979a5f815f86e0f3c7c2637fa6a2c672fb17e", default-features = false }
+uniffi = { version = "0.29.4", features = ["tokio"] }
+tokio = { version = "1", features = ["sync", "rt", "time"] }
+tokio-util = { version = "0.7" }
+futures = "0.3"
+thiserror = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

@@ -1,16 +1,16 @@
 ha-filen
 Copyright (c) 2026 ha-filen contributors
 
-This project includes a Python implementation of the Filen client protocol,
-written from Filen's public API documentation and cross-checked against the
-official SDKs:
+This project is licensed under the GNU Affero General Public License v3.0
+(AGPL-3.0-only). See LICENSE.
 
-- filen-sdk-go (https://github.com/FilenCloudDienste/filen-sdk-go), MIT license,
-  Copyright (c) FilenCloudDienste GmbH — reference implementation for the
-  cryptographic formats and API behaviour.
-- filen-sdk-ts (https://github.com/FilenCloudDienste/filen-sdk-ts),
-  AGPL-3.0 license, Copyright (c) FilenCloudDienste GmbH — used as a reference
-  only; no source code was copied from it.
+The native Python bridge in native/ links the official Filen Rust SDK:
+
+- filen-sdk-rs (https://github.com/FilenCloudDienste/filen-rs),
+  AGPL-3.0, Copyright (c) FilenCloudDienste GmbH.
+  The exact revision is pinned in native/Cargo.toml. The bridge only exposes a
+  small UniFFI surface; login, key derivation, encryption, metadata handling and
+  all transfers are implemented by filen-sdk-rs.
 
 The integration structure follows ha-internxt
 (https://github.com/TheRealSimon42/ha-internxt), MIT license.

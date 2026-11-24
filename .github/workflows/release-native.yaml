@@ -1,0 +1,80 @@
+name: Release native bridge
+
+on:
+  push:
+    tags:
+      - "native-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: Wheel ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            manylinux: auto
+          - target: aarch64-unknown-linux-gnu
+            manylinux: auto
+          - target: armv7-unknown-linux-gnueabihf
+            manylinux: auto
+          - target: x86_64-unknown-linux-musl
+            manylinux: musllinux_1_2
+          - target: aarch64-unknown-linux-musl
+            manylinux: musllinux_1_2
+          - target: armv7-unknown-linux-musleabihf
+            manylinux: musllinux_1_2
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: native
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          args: --release --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.target }}
+          path: native/dist/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: PyO3/maturin-action@v1
+        with:
+          working-directory: native
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: native/dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

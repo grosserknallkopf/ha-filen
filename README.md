@@ -9,16 +9,18 @@ Store your Home Assistant backups end-to-end encrypted in [Filen](https://filen.
 
 **Deutsch:** Mit dieser Integration landen deine Home-Assistant-Backups direkt und Ende-zu-Ende-verschlüsselt in Filen, ohne Umweg über das Rclone-Add-on. Filen wird dazu einfach als zusätzlicher Speicherort in den Backup-Einstellungen von Home Assistant ausgewählt.
 
-Built in the style of [ha-internxt](https://github.com/TheRealSimon42/ha-internxt), with the protocol implemented from Filen's API documentation and cross-checked against the official [filen-sdk-ts](https://github.com/FilenCloudDienste/filen-sdk-ts) and [filen-sdk-go](https://github.com/FilenCloudDienste/filen-sdk-go) SDKs. Works with the free Filen plan; no rclone, no Node.js, no add-on needed.
+Built in the style of [ha-internxt](https://github.com/TheRealSimon42/ha-internxt). The protocol and all cryptography come from Filen's official [filen-sdk-rs](https://github.com/FilenCloudDienste/filen-rs) through a small UniFFI bridge; the integration does not reimplement the API or crypto. Works with the free Filen plan; no rclone, no Node.js, no add-on needed.
+
+The SDK bridge is a native extension, so the integration ships with a prebuilt wheel for the common Home Assistant architectures (x86_64, aarch64, armv7; glibc and musl). Home Assistant installs it from PyPI when the integration is set up.
 
 ## Features
 
 - Filen as a backup location in **Settings → System → Backups** (Home Assistant 2026.4 or newer)
 - Streaming upload and download with flat memory use (1 MiB chunks), also for multi-GB backups on a Raspberry Pi
-- Client-side AES-256-GCM encryption in Filen's own formats: backups can also be downloaded in the Filen web or desktop app
+- Client-side encryption and name hashing implemented by Filen's own SDK, so files stay compatible with the Filen web and desktop apps
 - Login with two-factor authentication; the password is used once and never stored
 - Supports both Filen auth versions: 2 (PBKDF2) and 3 (Argon2id + DEK)
-- Integrity check (SHA-512 + GCM auth tags) on every download, free-space check before every upload
+- Integrity check (BLAKE3 + authenticated encryption) on every full download by the SDK, free-space check before every upload
 - Old backups are deleted permanently (not to the trash), so retention frees space
 - Diagnostics with e-mail and all keys redacted; English and German
 - **Actions** `filen.upload` and `filen.delete`: upload files from Home Assistant (for example camera snapshots from an automation) and delete them again, to the Filen trash by default
@@ -52,7 +54,10 @@ Files must be in a folder Home Assistant may read, like `/media` or `/config/www
 
 **HACS (Home Assistant before 2026.11):** HACS → ⋮ → *Custom repositories* → add `https://github.com/grosserknallkopf/ha-filen` as type *Integration*, install **Filen**, restart Home Assistant.
 
-**Manual:** copy `custom_components/filen` into `config/custom_components/` and restart Home Assistant.
+**Manual:** copy `custom_components/filen` into `config/custom_components/`, install the native bridge into the Home Assistant Python environment with `pip install filen-sdk-native==0.1.0b1`, and restart Home Assistant.
+
+The current release is a beta of the native SDK bridge; see [BETA.md](BETA.md)
+for testing and publishing instructions.
 
 ## Setup
 
@@ -76,20 +81,32 @@ Files must be in a folder Home Assistant may read, like `/media` or `/config/www
 | --- | --- |
 | `custom_components/filen/` | The Home Assistant integration (config flow with 2FA and reauth, backup agent, sensors, actions, media source, diagnostics, de/en) |
 | `custom_components/filen/brand/` | Icons and logos for the Home Assistant UI and Marketplace, from the official Filen press kit |
-| `aiofilen/` | Async Python client for Filen: login (auth v2/v3), AES-256-GCM, streaming up- and download with byte ranges |
-| `aiofilen/tests/` | Library tests against a fake Filen gateway (`pytest`) |
+| `aiofilen/` | Async Python facade over the native bridge: login, drive operations, streaming up- and download with byte ranges |
+| `native/` | Rust crate and UniFFI/Python packaging for the official `filen-sdk-rs` (built with maturin) |
+| `aiofilen/tests/` | Facade tests with an in-memory native module (`pytest`) |
 | `tests/` | Integration tests (`pytest-homeassistant-custom-component`) |
 | `scripts/sync_lib.sh` | Copies `aiofilen` into the integration |
+| `BETA.md` | Beta test and PyPI publishing instructions |
 
 Run the tests with:
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
+pip install maturin
+(cd native && maturin build --out dist)
+pip install native/dist/*.whl
 pip install -e ./aiofilen pytest pytest-asyncio pytest-homeassistant-custom-component
 pytest                  # Home Assistant integration tests
-(cd aiofilen && pytest) # library tests against a fake Filen gateway
+(cd aiofilen && pytest) # facade tests
 ```
+
+Building the native package needs the Rust nightly pinned in
+`native/rust-toolchain.toml`. Release wheels are built by the GitHub workflow in
+`.github/workflows/release-native.yaml` and published to PyPI with trusted
+publishing.
 
 ## License
 
-MIT (see [NOTICE](NOTICE) for third-party code). This is a community project, not an official Filen product.
+AGPL-3.0-only (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). The integration
+links Filen's AGPL-3.0 Rust SDK. This is a community project, not an official
+Filen product.

@@ -21,6 +21,7 @@ class Credentials:
     email: str
     base_folder_uuid: str
     private_key: str | None = field(default=None, repr=False)
+    user_id: int = 0
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -30,6 +31,7 @@ class Credentials:
             "email": self.email,
             "base_folder_uuid": self.base_folder_uuid,
             "private_key": self.private_key,
+            "user_id": self.user_id,
         }
 
     @classmethod
@@ -41,6 +43,7 @@ class Credentials:
             email=data["email"],
             base_folder_uuid=data["base_folder_uuid"],
             private_key=data.get("private_key"),
+            user_id=int(data.get("user_id") or 0),
         )
 
 

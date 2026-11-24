@@ -19,7 +19,7 @@
     "custom_components.filen"
   ],
   "requirements": [
-    "argon2-cffi==25.1.0"
+    "filen-sdk-native==0.1.0b1"
   ],
-  "version": "0.1.2"
+  "version": "0.2.0"
 }
