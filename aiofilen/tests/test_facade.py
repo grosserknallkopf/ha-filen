@@ -8,17 +8,50 @@ adapters, and error translation.
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+import asyncio
 from dataclasses import dataclass, field
 import itertools
+import threading
 from types import SimpleNamespace
 
 import pytest
 
 from aiofilen import Credentials, DriveFile, FilenClient
 from aiofilen import _native
+from aiofilen.client import READ_CHUNK, _AsyncByteSource
 from aiofilen.exceptions import FilenAuthError, FilenStreamError
 
 EMAIL = "user@example.com"
+
+
+async def test_source_pump_does_not_depend_on_default_executor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A busy HA executor must not stall the first upload byte."""
+
+    async def stream() -> AsyncIterator[bytes]:
+        yield b"x" * (READ_CHUNK * 5 + 17)
+
+    def executor_is_unavailable(*args: object, **kwargs: object) -> object:
+        raise AssertionError("the upload pump must not use asyncio.to_thread")
+
+    monkeypatch.setattr("aiofilen.client.asyncio.to_thread", executor_is_unavailable)
+    loop = asyncio.get_running_loop()
+    source = _AsyncByteSource(stream(), loop)
+    chunks: list[bytes] = []
+    done = asyncio.Event()
+
+    def read_all() -> None:
+        while chunk := source.read(64 * 1024):
+            chunks.append(chunk)
+        loop.call_soon_threadsafe(done.set)
+
+    thread = threading.Thread(target=read_all)
+    thread.start()
+    await asyncio.wait_for(done.wait(), timeout=2)
+    thread.join()
+    await source.aclose()
+    assert b"".join(chunks) == b"x" * (READ_CHUNK * 5 + 17)
 
 
 class SdkError(Exception):

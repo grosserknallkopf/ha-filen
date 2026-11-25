@@ -304,7 +304,13 @@ class _AsyncByteSource:
     def __init__(self, stream: AsyncIterator[bytes], loop: asyncio.AbstractEventLoop) -> None:
         self._stream = stream
         self._loop = loop
-        self._queue: queue.Queue[Any] = queue.Queue(maxsize=TRANSFER_SLOTS)
+        # Do not use asyncio.to_thread(queue.put, ...) here. Home Assistant's
+        # general executor can be saturated while a backup is prepared; then
+        # the producer never places its first byte and the native reader waits
+        # forever. The asyncio semaphore provides the same bounded buffering
+        # without depending on an executor worker.
+        self._queue: queue.SimpleQueue[Any] = queue.SimpleQueue()
+        self._slots = asyncio.Semaphore(TRANSFER_SLOTS)
         self._closed = False
         self.error: BaseException | None = None
         self._buffer = b""
@@ -320,23 +326,17 @@ class _AsyncByteSource:
                     if self._closed:
                         return
                     piece = bytes(view[offset : offset + READ_CHUNK])
-                    if not await asyncio.to_thread(self._put, piece):
+                    await self._slots.acquire()
+                    if self._closed:
+                        self._slots.release()
                         return
-            await asyncio.to_thread(self._put, _EOF)
+                    self._queue.put(piece)
+            self._queue.put(_EOF)
         except asyncio.CancelledError:
             raise
         except BaseException as err:  # noqa: BLE001 - reported via self.error
             self.error = err
-            await asyncio.to_thread(self._put, _ERROR)
-
-    def _put(self, item: Any) -> bool:
-        while not self._closed:
-            try:
-                self._queue.put(item, timeout=0.5)
-                return True
-            except queue.Full:
-                continue
-        return False
+            self._queue.put(_ERROR)
 
     def read(self, max_bytes: int) -> bytes:
         """Called from the native upload thread."""
@@ -349,6 +349,7 @@ class _AsyncByteSource:
         item = self._queue.get()
         if item is _EOF or item is _ERROR:
             return b""
+        self._loop.call_soon_threadsafe(self._slots.release)
         self._buffer = item
         data, self._buffer = self._buffer[:max_bytes], self._buffer[max_bytes:]
         return data
@@ -365,8 +366,7 @@ class _AsyncByteSource:
                 self._queue.get_nowait()
             except queue.Empty:
                 break
-        with contextlib.suppress(queue.Full):
-            self._queue.put_nowait(_EOF)
+        self._queue.put(_EOF)
 
 
 class _NativeByteSink:
