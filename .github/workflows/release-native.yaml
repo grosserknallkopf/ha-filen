@@ -94,7 +94,7 @@ jobs:
       - name: Import the x86_64 glibc wheel and check the public API
         run: |
           python3 -m pip install --no-deps dist/*manylinux*x86_64.whl
-          python3 -c 'import filen_sdk_native as sdk; assert all(hasattr(sdk, name) for name in ("Credentials", "SdkClient", "login"))'
+          python3 -c 'import filen_sdk_native as sdk; assert all(hasattr(sdk, name) for name in ("Credentials", "SourceRead", "SdkClient", "login"))'
 
   publish:
     name: Publish to PyPI
@@ -112,4 +112,3 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
-

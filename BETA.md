@@ -3,10 +3,10 @@
 This branch/release is the first version backed by Filen's official Rust SDK.
 It is published as a **pre-release** so it can be tried before a stable release.
 
-- Native bridge: `filen-sdk-native==0.1.0b3`
-- Integration: `0.2.0b4`, which pins the beta wheel in `manifest.json`
+- Native bridge: `filen-sdk-native==0.1.0b4`
+- Integration: `0.2.0b5`, which pins the beta wheel in `manifest.json`
 
-PyPI treats `0.1.0b3` as a pre-release, but an exact pin (`==0.1.0b3`) is
+PyPI treats `0.1.0b4` as a pre-release, but an exact pin (`==0.1.0b4`) is
 installed by pip without `--pre`. Home Assistant installs it automatically when
 the integration starts.
 
@@ -21,17 +21,17 @@ the integration starts.
 3. Push the tags:
 
    ```bash
-   git tag native-v0.1.0b3
-   git tag v0.2.0b4
-   git push origin main native-v0.1.0b3 v0.2.0b4
+    git tag native-v0.1.0b4
+    git tag v0.2.0b5
+    git push origin main native-v0.1.0b4 v0.2.0b5
    ```
 
-   `native-v0.1.0b3` builds and publishes the wheels for glibc and musl on
-   x86_64, aarch64 and armv7. `v0.2.0b4` is the sole GitHub beta release that
+    `native-v0.1.0b4` builds and publishes the wheels for glibc and musl on
+    x86_64, aarch64 and armv7. `v0.2.0b5` is the sole GitHub beta release that
    HACS/Marketplace installs.
 4. Install/update the integration from HACS or the Marketplace, then restart
    Home Assistant. On startup Home Assistant installs
-   `filen-sdk-native==0.1.0b3` from PyPI.
+    `filen-sdk-native==0.1.0b4` from PyPI.
 
 If the Marketplace/HACS only offers stable integration releases, install the
 `v0.2.0` tag explicitly. The native wheel itself is a pre-release, but the
@@ -43,7 +43,7 @@ The release workflow also stores the built wheels as GitHub Actions artifacts.
 For a quick local test on a Debian/glibc HA Container:
 
 ```bash
-pip install filen_sdk_native-0.1.0b3-*.whl
+pip install filen_sdk_native-0.1.0b4-*.whl
 ```
 
 On Home Assistant OS (Alpine/musl), use the `*-musllinux_*.whl` matching the

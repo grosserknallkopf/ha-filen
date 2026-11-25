@@ -338,21 +338,26 @@ class _AsyncByteSource:
             self.error = err
             self._queue.put(_ERROR)
 
-    def read(self, max_bytes: int) -> bytes:
-        """Called from the native upload thread."""
+    def read(self, max_bytes: int) -> Any:
+        """Poll for source bytes from the native upload thread."""
         max_bytes = int(max_bytes)
         if self._buffer:
             data, self._buffer = self._buffer[:max_bytes], self._buffer[max_bytes:]
-            return data
+            return _native.load().SourceRead(data=data, eof=False)
         if self._closed:
-            return b""
-        item = self._queue.get()
+            return _native.load().SourceRead(data=b"", eof=True)
+        try:
+            item = self._queue.get_nowait()
+        except queue.Empty:
+            # This callback holds Python's GIL. It must return rather than
+            # wait for _pump(), which runs on the event loop.
+            return _native.load().SourceRead(data=b"", eof=False)
         if item is _EOF or item is _ERROR:
-            return b""
+            return _native.load().SourceRead(data=b"", eof=True)
         self._loop.call_soon_threadsafe(self._slots.release)
         self._buffer = item
         data, self._buffer = self._buffer[:max_bytes], self._buffer[max_bytes:]
-        return data
+        return _native.load().SourceRead(data=data, eof=False)
 
     async def aclose(self) -> None:
         self._closed = True

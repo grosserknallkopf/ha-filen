@@ -203,14 +203,25 @@ pub struct LoginResult {
 
 // ------------------------------------------------------------------- callbacks
 
+/// One non-blocking read from a Python upload source.
+///
+/// An empty `data` value with `eof == false` means the Python event loop has
+/// not produced the next piece yet. This distinction is essential: waiting in
+/// a foreign Python callback can starve the event loop that must fill it.
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct SourceRead {
+    pub data: Vec<u8>,
+    pub eof: bool,
+}
+
 /// Source of upload bytes, implemented by Python.
 ///
-/// `read` is called from a dedicated Rust thread. Returning an empty vector
-/// means end of file. Python errors are kept on the Python object and turned
-/// into `FilenStreamError` by the wrapper after the native call returns.
+/// `read` is called from a dedicated Rust thread and must not block. Python
+/// errors are kept on the Python object and turned into `FilenStreamError` by
+/// the wrapper after the native call returns.
 #[uniffi::export(with_foreign)]
 pub trait ByteSource: Send + Sync {
-    fn read(&self, max_bytes: u64) -> Vec<u8>;
+    fn read(&self, max_bytes: u64) -> SourceRead;
 }
 
 /// Destination for download bytes, implemented by Python.
@@ -572,12 +583,19 @@ impl CallbackReader {
         let (sender, receiver) = tokio::sync::mpsc::channel::<Vec<u8>>(TRANSFER_CHANNEL);
         let thread = std::thread::spawn(move || {
             loop {
-                let data = source.read(READ_CHUNK as u64);
-                if data.is_empty() {
+                let read = source.read(READ_CHUNK as u64);
+                if read.eof {
                     let _ = sender.blocking_send(Vec::new());
                     break;
                 }
-                if sender.blocking_send(data).is_err() {
+                if read.data.is_empty() {
+                    // Never wait inside the Python callback. The Python
+                    // producer runs on its event loop and may need the GIL to
+                    // enqueue its first or next byte.
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                    continue;
+                }
+                if sender.blocking_send(read.data).is_err() {
                     break;
                 }
             }
@@ -712,7 +730,7 @@ impl AsyncWrite for CallbackWriter {
 mod tests {
     use std::sync::{
         Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     };
 
     use futures::{AsyncReadExt, AsyncWriteExt};
@@ -724,13 +742,47 @@ mod tests {
         offset: Mutex<usize>,
     }
 
-    impl ByteSource for Source {
-        fn read(&self, max_bytes: u64) -> Vec<u8> {
+    struct DelayedSource {
+        empty_reads: AtomicUsize,
+        data: Vec<u8>,
+        offset: Mutex<usize>,
+    }
+
+    impl ByteSource for DelayedSource {
+        fn read(&self, max_bytes: u64) -> SourceRead {
+            if self
+                .empty_reads
+                .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |count| {
+                    count.checked_sub(1)
+                })
+                .is_ok()
+            {
+                return SourceRead {
+                    data: Vec::new(),
+                    eof: false,
+                };
+            }
             let mut offset = self.offset.lock().unwrap();
             let start = *offset;
             let end = (start + usize::try_from(max_bytes).unwrap()).min(self.data.len());
             *offset = end;
-            self.data[start..end].to_vec()
+            SourceRead {
+                data: self.data[start..end].to_vec(),
+                eof: start == self.data.len(),
+            }
+        }
+    }
+
+    impl ByteSource for Source {
+        fn read(&self, max_bytes: u64) -> SourceRead {
+            let mut offset = self.offset.lock().unwrap();
+            let start = *offset;
+            let end = (start + usize::try_from(max_bytes).unwrap()).min(self.data.len());
+            *offset = end;
+            SourceRead {
+                data: self.data[start..end].to_vec(),
+                eof: start == self.data.len(),
+            }
         }
     }
 
@@ -768,6 +820,20 @@ mod tests {
     }
 
     #[test]
+    fn callback_reader_waits_for_a_nonblocking_source() {
+        let data = b"delayed upload".to_vec();
+        let source = Arc::new(DelayedSource {
+            empty_reads: AtomicUsize::new(3),
+            data: data.clone(),
+            offset: Mutex::new(0),
+        });
+        let mut reader = CallbackReader::new(source);
+        let mut out = Vec::new();
+        futures::executor::block_on(reader.read_to_end(&mut out)).unwrap();
+        assert_eq!(out, data);
+    }
+
+    #[test]
     fn callback_writer_preserves_bytes_and_finishes() {
         let sink = Arc::new(Sink::default());
         let mut writer = CallbackWriter::new(sink.clone());
@@ -781,5 +847,3 @@ mod tests {
         assert!(sink.finished.load(Ordering::SeqCst));
     }
 }
-
-

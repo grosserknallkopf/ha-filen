@@ -38,12 +38,21 @@ async def test_source_pump_does_not_depend_on_default_executor(
     monkeypatch.setattr("aiofilen.client.asyncio.to_thread", executor_is_unavailable)
     loop = asyncio.get_running_loop()
     source = _AsyncByteSource(stream(), loop)
+    # A Rust callback can arrive before the event loop has scheduled _pump().
+    # It must report "not ready" rather than block the callback thread.
+    initial = source.read(64 * 1024)
+    assert initial.data == b""
+    assert not initial.eof
     chunks: list[bytes] = []
     done = asyncio.Event()
 
     def read_all() -> None:
-        while chunk := source.read(64 * 1024):
-            chunks.append(chunk)
+        while True:
+            read = source.read(64 * 1024)
+            if read.data:
+                chunks.append(read.data)
+            elif read.eof:
+                break
         loop.call_soon_threadsafe(done.set)
 
     thread = threading.Thread(target=read_all)
@@ -84,6 +93,12 @@ class NativeCredentials:
     base_folder_uuid: str
     user_id: int
     private_key: str | None
+
+
+@dataclass
+class NativeSourceRead:
+    data: bytes
+    eof: bool
 
 
 @dataclass
@@ -200,9 +215,14 @@ class FakeSdkClient:
         import asyncio
 
         while remaining:
-            data = await asyncio.to_thread(source.read, min(remaining, 1024))
-            if not data:
+            read = await asyncio.to_thread(source.read, min(remaining, 1024))
+            if read.data:
+                data = read.data
+            elif read.eof:
                 break
+            else:
+                await asyncio.sleep(0)
+                continue
             chunks.append(data)
             remaining -= len(data)
             if progress is not None:
@@ -244,6 +264,7 @@ def fake_module() -> SimpleNamespace:
     return SimpleNamespace(
         SdkClient=FakeSdkClient,
         Credentials=NativeCredentials,
+        SourceRead=NativeSourceRead,
         User=NativeUser,
         DriveFile=NativeFile,
         DriveFolder=NativeFolder,

@@ -16,6 +16,7 @@ from pathlib import Path
 
 REQUIRED_BINDINGS = (
     "class Credentials",
+    "class SourceRead",
     "class SdkClient",
     "async def login(",
 )

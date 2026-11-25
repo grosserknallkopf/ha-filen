@@ -19,7 +19,7 @@
     "custom_components.filen"
   ],
   "requirements": [
-    "filen-sdk-native==0.1.0b3"
+    "filen-sdk-native==0.1.0b4"
   ],
-  "version": "0.2.0b4"
+  "version": "0.2.0b5"
 }
