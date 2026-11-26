@@ -341,6 +341,32 @@ async def test_upload_download_and_range() -> None:
         assert b"".join([chunk async for chunk in stream]) == data[100:200]
 
 
+async def test_upload_progress_follows_source_bytes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Progress must advance with the bytes handed to the SDK.
+
+    The SDK only reports acknowledged 16 MB chunks, so a large backup used to
+    look stuck at 0 % for hours although data was flowing.
+    """
+    monkeypatch.setattr("aiofilen.client.PROGRESS_INTERVAL", 0.0)
+    client = make_client()
+    folder = await client.ensure_folder("root", "Backups")
+    data = b"y" * 5000
+    progress: list[int] = []
+    await client.upload(
+        _stream(data),
+        size=len(data),
+        folder_uuid=folder.uuid,
+        name="progress.bin",
+        progress=progress.append,
+    )
+    assert progress
+    assert progress == sorted(progress)
+    assert len(set(progress)) > 1
+    assert progress[-1] == len(data)
+
+
 async def test_empty_download() -> None:
     client = make_client()
     file = DriveFile(

@@ -18,6 +18,7 @@ import contextlib
 import logging
 import queue
 import threading
+from time import monotonic
 from typing import Any
 
 from . import _native
@@ -37,6 +38,7 @@ ProgressCallback = Callable[[int], None]
 
 READ_CHUNK = 1024 * 1024
 TRANSFER_SLOTS = 4
+PROGRESS_INTERVAL = 0.5
 
 _EOF = object()
 _ERROR = object()
@@ -235,12 +237,12 @@ class FilenClient:
         upload fails.
         """
         loop = asyncio.get_running_loop()
-        source = _AsyncByteSource(stream, loop)
         callback = None if progress is None else _ProgressAdapter(progress, loop)
+        source = _AsyncByteSource(stream, loop, progress=callback, total=size)
         try:
             client = await self._client()
             result = await client.upload(
-                source, size, folder_uuid, name, mime, callback
+                source, size, folder_uuid, name, mime, None
             )
         except Exception as err:
             if source.error is not None:
@@ -257,6 +259,8 @@ class FilenClient:
             raise FilenStreamError(
                 f"reading the source stream failed: {type(source.error).__name__}"
             ) from source.error
+        if callback is not None:
+            callback.on_progress(size)
         return DriveFile(**_native.file_fields(result))
 
     async def upload_bytes(
@@ -301,9 +305,24 @@ class FilenClient:
 class _AsyncByteSource:
     """Adapts a caller's async byte iterator to the native ByteSource callback."""
 
-    def __init__(self, stream: AsyncIterator[bytes], loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(
+        self,
+        stream: AsyncIterator[bytes],
+        loop: asyncio.AbstractEventLoop,
+        *,
+        progress: _ProgressAdapter | None = None,
+        total: int = 0,
+    ) -> None:
         self._stream = stream
         self._loop = loop
+        # Progress is reported from the bytes handed to the native reader. The
+        # SDK's own progress callback only fires when whole 16 MB chunks are
+        # acknowledged, so a multi-gigabyte upload can look stuck at 0 % for
+        # hours while it is transferring fine.
+        self._progress = progress
+        self._total = total
+        self._sent = 0
+        self._reported = 0.0
         # Do not use asyncio.to_thread(queue.put, ...) here. Home Assistant's
         # general executor can be saturated while a backup is prepared; then
         # the producer never places its first byte and the native reader waits
@@ -338,12 +357,28 @@ class _AsyncByteSource:
             self.error = err
             self._queue.put(_ERROR)
 
+    def _chunk(self, data: bytes) -> Any:
+        """Return a data chunk to the native reader and account for it."""
+        self._sent += len(data)
+        self._report()
+        return _native.load().SourceRead(data=data, eof=False)
+
+    def _report(self) -> None:
+        progress = self._progress
+        if progress is None:
+            return
+        now = monotonic()
+        if self._sent < self._total and now - self._reported < PROGRESS_INTERVAL:
+            return
+        self._reported = now
+        progress.on_progress(self._sent)
+
     def read(self, max_bytes: int) -> Any:
         """Poll for source bytes from the native upload thread."""
         max_bytes = int(max_bytes)
         if self._buffer:
             data, self._buffer = self._buffer[:max_bytes], self._buffer[max_bytes:]
-            return _native.load().SourceRead(data=data, eof=False)
+            return self._chunk(data)
         if self._closed:
             return _native.load().SourceRead(data=b"", eof=True)
         try:
@@ -357,7 +392,7 @@ class _AsyncByteSource:
         self._loop.call_soon_threadsafe(self._slots.release)
         self._buffer = item
         data, self._buffer = self._buffer[:max_bytes], self._buffer[max_bytes:]
-        return _native.load().SourceRead(data=data, eof=False)
+        return self._chunk(data)
 
     async def aclose(self) -> None:
         self._closed = True
@@ -412,7 +447,7 @@ class _NativeByteSink:
 
 
 class _ProgressAdapter:
-    """Marshals native (worker-thread) progress callbacks to the HA event loop."""
+    """Marshals upload progress to the HA event loop."""
 
     def __init__(
         self, callback: ProgressCallback, loop: asyncio.AbstractEventLoop

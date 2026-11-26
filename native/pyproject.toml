@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "filen-sdk-native"
-version = "0.1.0b4"
+version = "0.1.0b5"
 description = "Python bindings for the official Filen Rust SDK, used by the ha-filen Home Assistant integration"
 readme = "README.md"
 requires-python = ">=3.12"

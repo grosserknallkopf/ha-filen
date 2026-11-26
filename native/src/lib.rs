@@ -250,7 +250,12 @@ pub struct SdkClient {
 impl SdkClient {
     #[uniffi::constructor]
     pub fn from_credentials(credentials: Credentials) -> Result<Arc<Self>, SdkError> {
-        let unauth = UnauthClient::from_config(ClientConfig::default()).map_err(map_error)?;
+        // Backups are uploaded as 1 MiB chunks. The SDK default of 16 simultaneous
+        // transfers can create aggressive bursts on constrained HA hosts and home
+        // routers; Fritz!Box telemetry showed bursts followed by long idle periods.
+        // Limit this to four in-flight chunks while retaining some transfer overlap.
+        let config = ClientConfig::default().with_concurrency(4);
+        let unauth = UnauthClient::from_config(config).map_err(map_error)?;
         let auth_info = if credentials.auth_version == 3 {
             credentials
                 .master_keys

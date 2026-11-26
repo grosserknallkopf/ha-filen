@@ -928,7 +928,7 @@ dependencies = [
 
 [[package]]
 name = "filen-sdk-native"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.5"
 dependencies = [
  "filen-sdk-rs",
  "filen-types",
